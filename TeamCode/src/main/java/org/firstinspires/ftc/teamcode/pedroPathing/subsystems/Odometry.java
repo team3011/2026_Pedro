@@ -1,10 +1,8 @@
-package pedroPathing.subsystems;
+package org.firstinspires.ftc.teamcode.pedroPathing.subsystems;
 
-import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
-@Config
 public class Odometry {
     private Servo odoServo;
     public static double odoUpPos = .1;

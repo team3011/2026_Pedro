@@ -1,15 +1,13 @@
-package pedroPathing.subsystems;
+package org.firstinspires.ftc.teamcode.pedroPathing.subsystems;
 
-import com.acmerobotics.dashboard.config.Config;
+
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import javax.annotation.Nonnull;
 
 // referenced https://gm0.org/en/latest/docs/software/tutorials/mecanum-drive.html
 
-@Config
 public class MecanumDrive {
     public static double correctionMultiplier = 1;
     public static double ANGULAR_TOLERANCE_DEGREES = 2;
@@ -22,7 +20,7 @@ public class MecanumDrive {
     //acceptable angle tolerance in radians
     public double ANGULAR_TOLERANCE = Math.PI/90;
 
-    public MecanumDrive(@Nonnull HardwareMap hardwareMap){
+    public MecanumDrive(HardwareMap hardwareMap){
         leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
         leftBack = hardwareMap.get(DcMotorEx.class, "leftRear");
         rightBack = hardwareMap.get(DcMotorEx.class, "rightRear");

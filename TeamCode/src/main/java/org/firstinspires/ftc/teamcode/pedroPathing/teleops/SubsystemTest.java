@@ -1,23 +1,23 @@
-package org.firstinspires.ftc.teamcode.pedroPathing;
+package org.firstinspires.ftc.teamcode.pedroPathing.teleops;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.pedroPathing.subsystems.Intake;
 
-//@Configurable       //if you want configurable constants
-//@TeleOp       //if this is a teleop
-//@Autonomous   //if this is an auto
-public class BlankOp extends OpMode {
+@Configurable       //if you want configurable constants
+@TeleOp       //if this is a teleop
+@Autonomous   //if this is an auto
+public class SubsystemTest extends OpMode {
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
+
+    Intake intake;
     //this section allows us to access telemetry data from a browser
     PanelsTelemetry dashboard = PanelsTelemetry.INSTANCE;
     TelemetryManager dashboardTelemetry = dashboard.getTelemetry();
@@ -28,7 +28,7 @@ public class BlankOp extends OpMode {
     @Override
     public void init() {
         dashboardTelemetry.addData("Status", "Initialized");
-
+        intake = new Intake(hardwareMap);
         // Initialize the hardware variables. Note that the strings used here as parameters
         // to 'get' must correspond to the names assigned during the robot configuration
         // step
@@ -58,6 +58,8 @@ public class BlankOp extends OpMode {
     @Override
     public void loop() {
         dashboardTelemetry.addData("Status", "Run Time: " + runtime.toString());
+        intake.spinIntake();
+        intake.update();
         dashboardTelemetry.update();
     }
 

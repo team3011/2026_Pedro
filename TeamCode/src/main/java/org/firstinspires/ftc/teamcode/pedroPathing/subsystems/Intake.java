@@ -1,15 +1,18 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.subsystems;
 
+import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-
+@Configurable
 public class Intake {
-    DcMotor intakeMotor;
+    private DcMotor intakeMotor;
 
     public static double motorPow = 0;
 
     public Intake(HardwareMap hardwareMap){
         intakeMotor = hardwareMap.get(DcMotor.class, "intakeMotor");
+        intakeMotor.setDirection(DcMotorSimple.Direction.REVERSE);
     }
 
     public void spinIntake(){

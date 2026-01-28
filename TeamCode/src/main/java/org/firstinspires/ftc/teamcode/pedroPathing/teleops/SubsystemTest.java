@@ -28,6 +28,7 @@ public class SubsystemTest extends OpMode {
     //this section allows us to access telemetry data from a browser
     PanelsTelemetry dashboard = PanelsTelemetry.INSTANCE;
     TelemetryManager dashboardTelemetry = dashboard.getTelemetry();
+    public boolean logger = true;
 
     /*
      * Code to run ONCE when the driver hits INIT
@@ -59,8 +60,8 @@ public class SubsystemTest extends OpMode {
      */
     @Override
     public void start() {
-        runtime.reset();
         index.reset();
+        runtime.reset();
     }
 
     /*
@@ -68,9 +69,11 @@ public class SubsystemTest extends OpMode {
      */
     @Override
     public void loop() {
+//        if(index.colorIsDetected()) {
+//            dashboardTelemetry.addData("sensed time", runtime.milliseconds());
+//        }
         dashboardTelemetry.addData("Status", "Run Time: " + runtime.toString());
 
-//        ejector.ejectorOn();
         index.update();
         shooter.update();
         ejector.update();

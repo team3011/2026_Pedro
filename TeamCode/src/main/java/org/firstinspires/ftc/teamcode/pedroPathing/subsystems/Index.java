@@ -5,6 +5,7 @@ import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.qualcomm.hardware.rev.RevTouchSensor;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -12,18 +13,20 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 @Configurable
 public class Index {
     public int GEARRATIO = 20;
-    public int TICKSPERREV = 500;
+    public int TICKSPERREV = 530;
     public int TICKSBETWEENSLOTS = TICKSPERREV/3;
     public static double maxPower = 0.5;
+    public static double minPower = 0.01;
     public static double resetSpeed = 0.2;
     public static int targetPos;
     public static double indexPow;
     private DcMotorEx spindexer;
     private PIDController controller;
     private RevTouchSensor resetSensor;
+    private ColorSense colorSense;
     public static double kP = 0.04;
     public static double kI = 0.008;
-    public static double kD = 0.0004;
+    public static double kD = 0.0001;
     public boolean resetFlag = false;
     public boolean isMoving = false;
     PanelsTelemetry dashboard = PanelsTelemetry.INSTANCE;
@@ -33,6 +36,7 @@ public class Index {
         spindexer.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         resetSensor = hardwareMap.get(RevTouchSensor.class, "resetSensor");
+        colorSense = new ColorSense(hardwareMap);
         controller = new PIDController(kP, kI, kD);
     }
 
@@ -57,19 +61,22 @@ public class Index {
         spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
+    public boolean colorIsDetected(){
+        return colorSense.colorIsDetected();
+    }
+
     public void update(){
+        colorSense.update();
         double pid = 0;
 
         int currentPosition = spindexer.getCurrentPosition();
-        if(currentPosition < targetPos-5 || currentPosition > targetPos+5){
-            isMoving = true;
-        }else{
-            isMoving = false;
-        }
 
         controller.setPID(kP, kI, kD);
         pid = this.controller.calculate(currentPosition, this.targetPos);
         pid = limiter(pid, maxPower);
+        if(Math.abs(pid) < minPower){
+            pid = 0;
+        }
 
         spindexer.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
         spindexer.setPower(pid);

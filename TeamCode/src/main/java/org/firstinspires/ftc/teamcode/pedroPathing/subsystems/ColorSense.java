@@ -15,6 +15,7 @@ public class ColorSense {
     PanelsTelemetry dashboard = PanelsTelemetry.INSTANCE;
     TelemetryManager dashboardTelemetry = dashboard.getTelemetry();
     private double hue;
+    private int color;
     public ColorSense(HardwareMap hardwareMap){
         colorSense = hardwareMap.get(NormalizedColorSensor.class, "colorSense");
     }
@@ -23,6 +24,14 @@ public class ColorSense {
             return true;
         }
         return false;
+    }
+
+    public boolean ballDetected(){
+        return color == 1 || color == 2;
+    }
+
+    public int getColor(){
+        return color;
     }
 
     public void update(){
@@ -37,12 +46,16 @@ public class ColorSense {
         dashboardTelemetry.addData("Alpha", colors.alpha);
         if(JavaUtil.colorToSaturation(colors.toColor()) == 0){
             dashboardTelemetry.addData("Detected", "Nothing");
+            color = 0;
         }else if(hue >= 150 && hue <= 180){
             dashboardTelemetry.addData("Detected", "Green");
+            color = 2;
         }else if(hue >= 210 && hue <= 240){
             dashboardTelemetry.addData("Detected", "Purple");
+            color = 1;
         }else{
             dashboardTelemetry.addData("Detected", "Other");
+            color = 0;
         }
     }
 }

@@ -39,7 +39,7 @@ public class SubsystemTest extends OpMode {
         intake = new Intake(hardwareMap);
         ejector = new Ejector(hardwareMap);
         shooter = new Shooter(hardwareMap);
-        index = new Index(hardwareMap);
+        index = new Index(hardwareMap, dashboardTelemetry);
         // Initialize the hardware variables. Note that the strings used here as parameters
         // to 'get' must correspond to the names assigned during the robot configuration
         // step

@@ -36,15 +36,15 @@ public class Index {
     public boolean isSensing = false;
     public boolean resetFlag = false;
     public boolean isMoving = false;
-    PanelsTelemetry dashboard = PanelsTelemetry.INSTANCE;
-    TelemetryManager dashboardTelemetry = dashboard.getTelemetry();
-    public Index(HardwareMap hardwareMap){
+    TelemetryManager dashboardTelemetry;
+    public Index(HardwareMap hardwareMap, TelemetryManager dashboard){
         spindexer = hardwareMap.get(DcMotorEx.class, "spindex");
         spindexer.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         resetSensor = hardwareMap.get(RevTouchSensor.class, "resetSensor");
         colorSense = new ColorSense(hardwareMap);
         controller = new PIDController(kP, kI, kD);
+        dashboardTelemetry = dashboard;
     }
 
     public void toPickup(int slot){
@@ -101,6 +101,7 @@ public class Index {
     }
     public void setIsSensing(boolean b){
         isSensing = b;
+
     }
 
     public void update(){

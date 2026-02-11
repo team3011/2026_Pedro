@@ -8,7 +8,7 @@ public class MyLimeLight {
     private final Limelight3A limelight;
     private double xLoc;
     private double yLoc;
-    private double angle;
+    private double area;
 
     public MyLimeLight(HardwareMap hardwareMap){
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
@@ -25,14 +25,11 @@ public class MyLimeLight {
 
     public boolean update(){
         LLResult result = limelight.getLatestResult();
-        if (result != null) {
+        if (result != null && result.isValid()) {
             // Getting numbers from Python
-            double[] pythonOutputs = result.getPythonOutput();
-            if (pythonOutputs != null && pythonOutputs.length > 0) {
-                xLoc = pythonOutputs[1];
-                yLoc = pythonOutputs[2];
-                angle = pythonOutputs[3];
-            }
+            xLoc = result.getTx();
+            yLoc = result.getTy();
+            area = result.getTa();
             return true;
         }
         return false;
@@ -47,7 +44,7 @@ public class MyLimeLight {
     }
 
     public double getAngle(){
-        return angle;
+        return area;
     }
 
 

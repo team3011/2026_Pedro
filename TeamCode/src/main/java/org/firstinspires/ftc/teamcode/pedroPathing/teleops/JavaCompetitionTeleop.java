@@ -37,7 +37,7 @@ public abstract class JavaCompetitionTeleop extends OpMode {
         // Initialize the hardware variables. Note that the strings used here as parameters
         // to 'get' must correspond to the names assigned during the robot configuration
         // step
-        superSystem = new SuperSystem(hardwareMap);
+        superSystem = new SuperSystem(hardwareMap, dashboardTelemetry);
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Initialized");
     }

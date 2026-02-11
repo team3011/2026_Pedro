@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.subsystems;
 
+import com.bylazar.telemetry.PanelsTelemetry;
+import com.bylazar.telemetry.TelemetryManager;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 public class SuperSystem {
@@ -9,8 +11,8 @@ public class SuperSystem {
     Shooter shooter;
 
     public static double shooterPower = 0.9;
-    public SuperSystem(HardwareMap hardwareMap){
-        index = new Index(hardwareMap);
+    public SuperSystem(HardwareMap hardwareMap, TelemetryManager dashboard){
+        index = new Index(hardwareMap, dashboard);
         ejector = new Ejector(hardwareMap);
         intake = new Intake(hardwareMap);
         shooter = new Shooter(hardwareMap);

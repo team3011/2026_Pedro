@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.subsystems;
 
+import com.bylazar.telemetry.TelemetryManager;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -9,9 +10,11 @@ public class MyLimeLight {
     private double xLoc;
     private double yLoc;
     private double area;
+    TelemetryManager dashboardTelemetry;
 
-    public MyLimeLight(HardwareMap hardwareMap){
+    public MyLimeLight(HardwareMap hardwareMap, TelemetryManager dashboard){
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        dashboardTelemetry = dashboard;
     }
 
     public void start(int input){

@@ -41,8 +41,8 @@ public class MecanumDrive {
         // TODO: reverse motor directions if needed
         leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
         leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
-//        pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
-//        pinpoint.resetPosAndIMU();
+        pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
+        pinpoint.resetPosAndIMU();
         try {
             Thread.sleep(300);
         } catch (InterruptedException e) {
@@ -56,9 +56,8 @@ public class MecanumDrive {
 
     //returns the current heading of the robot in RAD
     public double calcYaw() {
-//        pinpoint.update(GoBildaPinpointDriver.readData.ONLY_UPDATE_HEADING);
-//        return Math.round(pinpoint.getHeading()*10)/10.0;
-        return 0;
+        pinpoint.update(GoBildaPinpointDriver.readData.ONLY_UPDATE_HEADING);
+        return Math.round(pinpoint.getHeading()*10)/10.0;
     }
 
     //determines the shortest path to desired angle in degrees

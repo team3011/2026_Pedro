@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 @Configurable
 public class Ejector {
-    public static double ejectorPos = .57;
+    public static double ejectorPos = .72;
     Servo ejector;
 
     public Ejector(HardwareMap hardwareMap){

@@ -19,13 +19,12 @@ import org.firstinspires.ftc.teamcode.pedroPathing.subsystems.Shooter;
 public class SubsystemTest extends OpMode {
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
-
     Intake intake;
     Shooter shooter;
     Ejector ejector;
-
     Index index;
     //this section allows us to access telemetry data from a browser
+    public static int targSlot = 0;
     PanelsTelemetry dashboard = PanelsTelemetry.INSTANCE;
     TelemetryManager dashboardTelemetry = dashboard.getTelemetry();
     public boolean logger = true;
@@ -73,7 +72,7 @@ public class SubsystemTest extends OpMode {
 //            dashboardTelemetry.addData("sensed time", runtime.milliseconds());
 //        }
         dashboardTelemetry.addData("Status", "Run Time: " + runtime.toString());
-
+        index.toShoot(targSlot);
         index.update();
         shooter.update();
         ejector.update();

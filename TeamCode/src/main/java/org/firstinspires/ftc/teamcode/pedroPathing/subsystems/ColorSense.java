@@ -12,12 +12,15 @@ import org.firstinspires.ftc.robotcore.external.JavaUtil;
 
 public class ColorSense {
     private NormalizedColorSensor colorSense;
-    PanelsTelemetry dashboard = PanelsTelemetry.INSTANCE;
-    TelemetryManager dashboardTelemetry = dashboard.getTelemetry();
+    private NormalizedColorSensor colorSense2;
+    TelemetryManager dashboardTelemetry;
     private double hue;
+    private double hue2;
     private int color;
-    public ColorSense(HardwareMap hardwareMap){
+    public ColorSense(HardwareMap hardwareMap, TelemetryManager dashboard){
         colorSense = hardwareMap.get(NormalizedColorSensor.class, "colorSense");
+        colorSense2 = hardwareMap.get(NormalizedColorSensor.class, "colorSense2");
+        dashboardTelemetry = dashboard;
     }
     public boolean colorIsDetected(){
         if(hue != 0){
@@ -37,22 +40,26 @@ public class ColorSense {
     public void update(){
         dashboardTelemetry.addData("Light Detected", ((OpticalDistanceSensor) colorSense).getLightDetected());
         NormalizedRGBA colors = colorSense.getNormalizedColors();
+        NormalizedRGBA colors2 = colorSense2.getNormalizedColors();
         hue = JavaUtil.colorToHue(colors.toColor());
+        hue2 = JavaUtil.colorToHue(colors2.toColor());
 
         //Determining the amount of red, green, and blue
 
         //Determining HSV and alpha
         dashboardTelemetry.addData("Hue", hue);
+        dashboardTelemetry.addData("Hue2", hue2);
         dashboardTelemetry.addData("Alpha", colors.alpha);
-        if(JavaUtil.colorToSaturation(colors.toColor()) == 0){
-            dashboardTelemetry.addData("Detected", "Nothing");
-            color = 0;
-        }else if(hue >= 150 && hue <= 180){
+
+        if(hue >= 150 && hue <= 180 || hue2 >= 150 && hue2 <= 180){
             dashboardTelemetry.addData("Detected", "Green");
             color = 2;
-        }else if(hue >= 210 && hue <= 240){
+        }else if(hue >= 210 && hue <= 240 || hue2 >= 210 && hue2 <= 240){
             dashboardTelemetry.addData("Detected", "Purple");
             color = 1;
+        }else if(colors.alpha < 0.1){
+            dashboardTelemetry.addData("Detected", "Nothing");
+            color = 0;
         }else{
             dashboardTelemetry.addData("Detected", "Other");
             color = 0;

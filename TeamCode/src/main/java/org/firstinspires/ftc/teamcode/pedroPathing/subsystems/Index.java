@@ -18,11 +18,11 @@ public class Index {
     public int TICKSBETWEENLOCS = TICKSPERREV/6;
     public static double maxPower = 0.5;
     public static double minPower = 0.01;
-    public static double resetSpeed = 0.2;
+    public static double resetSpeed = 0.3;
     public double currentPosInDegrees;
     public int currentRevs;
     public int currentPosition;
-    public int currentSlot = 0;
+    public int currentSlot = 0; // slots go from 0-2
     public static int targetPos;
     private DcMotorEx spindexer;
     private PIDController controller;
@@ -30,8 +30,8 @@ public class Index {
     private ColorSense colorSense;
     private Slot[]
             indexSlots = {new Slot(0, 0), new Slot(TICKSBETWEENSLOTS,0), new Slot(TICKSBETWEENSLOTS*2,0)};
-    public static double kP = 0.04;
-    public static double kI = 0.008;
+    public static double kP = 0.012;
+    public static double kI = 0.001;
     public static double kD = 0.0001;
     public boolean isSensing = false;
     public boolean resetFlag = false;
@@ -42,7 +42,7 @@ public class Index {
         spindexer.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         resetSensor = hardwareMap.get(RevTouchSensor.class, "resetSensor");
-        colorSense = new ColorSense(hardwareMap);
+        colorSense = new ColorSense(hardwareMap, dashboard);
         controller = new PIDController(kP, kI, kD);
         dashboardTelemetry = dashboard;
     }
@@ -62,6 +62,21 @@ public class Index {
             }else{
                 targetPos = ((currentRevs + 1) * TICKSPERREV) + relativeTargetPos;
             }
+        }
+    }
+    public void toPickupTarget(int t){
+        int closestSlot = -1;
+        for(int i = 0; i<indexSlots.length; i++){
+            int relativeTargetPos = (2*TICKSBETWEENLOCS*(i)) + (TICKSBETWEENLOCS * 3);
+            int closestSlotPos = (2*TICKSBETWEENLOCS*(closestSlot) + (TICKSBETWEENLOCS * 3));
+            if(indexSlots[i].getColor() == t && closestSlot == -1 || Math.abs(currentPosition-((currentRevs * TICKSPERREV) + relativeTargetPos)) < Math.abs(currentPosition-((currentRevs * TICKSPERREV) + closestSlotPos))){
+                closestSlot = i;
+            }
+        }
+        if(closestSlot == -1){
+            targetPos = currentPosition;
+        }else{
+            toPickup(closestSlot);
         }
     }
 
@@ -96,12 +111,23 @@ public class Index {
         spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
-    public boolean colorIsDetected(){
-        return colorSense.colorIsDetected();
+    public boolean ballDetected(){
+        return colorSense.ballDetected();
+    }
+    public boolean currentSlotStatus(){
+        return indexSlots[currentSlot].getColor() != 0;
+    }
+    public boolean isFull(){
+        for(int i = 0; i<indexSlots.length; i++){
+            if(indexSlots[i].getColor() == 0){
+                return false;
+            }
+        }
+        isSensing = false;
+        return true;
     }
     public void setIsSensing(boolean b){
         isSensing = b;
-
     }
 
     public void update(){
@@ -109,7 +135,6 @@ public class Index {
         colorSense.update();
         if(isSensing & colorSense.ballDetected()){
             indexSlots[currentSlot].setColor(colorSense.getColor());
-            isSensing = false;
         }
         double pid = 0;
 
@@ -142,7 +167,7 @@ public class Index {
     }
     public class Slot{
         private int position;
-        private int color;
+        private int color; // 0 = nothing, 1 = purple, 2 = green
 
         public Slot(int p, int c){
             position = p;

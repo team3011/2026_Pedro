@@ -26,8 +26,8 @@ public abstract class JavaCompetitionTeleop extends OpMode {
     MecanumDrive drive;
     GamepadEx g1;
     SuperSystem superSystem;
-    /*
-     * Code to run ONCE when the driver hits INIT
+    private double rotSpeed = 0.5;
+    /*     * Code to run ONCE when the driver hits INIT
      */
     @Override
     public void init() {
@@ -72,10 +72,15 @@ public abstract class JavaCompetitionTeleop extends OpMode {
         right_t = zeroAnalogInput(g1.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER));
 
         dashboardTelemetry.addData("Status", "Run Time: " + runtime.toString());
-        dashboardTelemetry.addData("direction facing",drive.getHeadingToMaintain());
+        dashboardTelemetry.addData("direction facing", drive.getHeadingToMaintain());
         dashboardTelemetry.update();
-
-        drive.drive2(digitalTransmission(left_x), digitalTransmission(left_y), -right_x);
+        if (!superSystem.getAimStatus() && !superSystem.holdingPosition()){
+            drive.drive2(digitalTransmission(left_x), digitalTransmission(left_y), -right_x);
+        }else if(superSystem.getAimStatus()){
+            drive.drive2(digitalTransmission(0), digitalTransmission(0), rotSpeed* superSystem.getAimDirection());
+        }else if(superSystem.holdingPosition()){
+            drive.drive2(0,0,0);
+        }
 
         if (this.g1.wasJustPressed(GamepadKeys.Button.A)) { //really X
             drive.setHeadingToMaintain(0); // 180 degrees???
@@ -85,6 +90,22 @@ public abstract class JavaCompetitionTeleop extends OpMode {
             drive.setHeadingToMaintain(180);
         } else if (this.g1.wasJustPressed(GamepadKeys.Button.X)) { ////really []
             drive.setHeadingToMaintain(-90);
+        }
+
+        if (g1.wasJustPressed(GamepadKeys.Button.LEFT_BUMPER)){
+            superSystem.toggle();
+        }
+
+        if (g1.isDown(GamepadKeys.Button.RIGHT_BUMPER)){
+            if (this.g1.isDown(GamepadKeys.Button.A)) {
+                superSystem.reset();
+            }else if(this.g1.isDown(GamepadKeys.Button.B)){
+
+            }else if(this.g1.isDown(GamepadKeys.Button.X)){
+                superSystem.startIntaking();
+            }else if(this.g1.isDown(GamepadKeys.Button.Y)){
+                superSystem.aimShooter();
+            }
         }
         superSystem.update();
         dashboardTelemetry.update();

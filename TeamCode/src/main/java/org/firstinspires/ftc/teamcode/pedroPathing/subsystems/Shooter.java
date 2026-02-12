@@ -37,6 +37,10 @@ public class Shooter {
         shooterPos = pos;
     }
 
+    public void defaultShooterPos(){
+        shooterPos = 0.4;
+    }
+
     public void update(){
         shooterL.setPower(shooterPow);
         shooterR.setPower(shooterPow);

@@ -72,7 +72,7 @@ public class SubsystemTest extends OpMode {
 //            dashboardTelemetry.addData("sensed time", runtime.milliseconds());
 //        }
         dashboardTelemetry.addData("Status", "Run Time: " + runtime.toString());
-        index.toShoot(targSlot);
+        index.toPickupTarget(targSlot);
         index.update();
         shooter.update();
         ejector.update();

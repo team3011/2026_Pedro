@@ -2,13 +2,12 @@ package org.firstinspires.ftc.teamcode.pedroPathing.subsystems;
 
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.bylazar.configurables.annotations.Configurable;
-import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.qualcomm.hardware.rev.RevTouchSensor;
-import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 @Configurable
 public class Index {
@@ -16,6 +15,8 @@ public class Index {
     public int TICKSPERREV = 530;
     public int TICKSBETWEENSLOTS = TICKSPERREV/3;
     public int TICKSBETWEENLOCS = TICKSPERREV/6;
+    public static int tolerance = 15;
+    public static int delay = 200;
     public static double maxPower = 0.5;
     public static double minPower = 0.01;
     public static double resetSpeed = 0.3;
@@ -37,13 +38,18 @@ public class Index {
     public boolean resetFlag = false;
     public boolean isMoving = false;
     TelemetryManager dashboardTelemetry;
+    ElapsedTime intakeDelay;
     public Index(HardwareMap hardwareMap, TelemetryManager dashboard){
+        intakeDelay = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
         spindexer = hardwareMap.get(DcMotorEx.class, "spindex");
         spindexer.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         resetSensor = hardwareMap.get(RevTouchSensor.class, "resetSensor");
         colorSense = new ColorSense(hardwareMap, dashboard);
         controller = new PIDController(kP, kI, kD);
+        for(int i = 0; i < indexSlots.length; i++){
+            indexSlots[i].setColor(0);
+        }
         dashboardTelemetry = dashboard;
     }
 
@@ -67,9 +73,9 @@ public class Index {
     public void toPickupTarget(int t){
         int closestSlot = -1;
         for(int i = 0; i<indexSlots.length; i++){
-            int relativeTargetPos = (2*TICKSBETWEENLOCS*(i)) + (TICKSBETWEENLOCS * 3);
-            int closestSlotPos = (2*TICKSBETWEENLOCS*(closestSlot) + (TICKSBETWEENLOCS * 3));
-            if(indexSlots[i].getColor() == t && closestSlot == -1 || Math.abs(currentPosition-((currentRevs * TICKSPERREV) + relativeTargetPos)) < Math.abs(currentPosition-((currentRevs * TICKSPERREV) + closestSlotPos))){
+            int relativeTargetPos = (2*TICKSBETWEENLOCS*(i) + (3*TICKSBETWEENLOCS));
+            int closestSlotPos = (2*TICKSBETWEENLOCS*(closestSlot) + (3*TICKSBETWEENLOCS));
+            if(indexSlots[i].getColor() == t && (closestSlot == -1 || Math.abs(currentPosition-((currentRevs * TICKSPERREV) + relativeTargetPos)) < Math.abs(currentPosition-((currentRevs * TICKSPERREV) + closestSlotPos)))){
                 closestSlot = i;
             }
         }
@@ -79,7 +85,36 @@ public class Index {
             toPickup(closestSlot);
         }
     }
-
+    public void toShootTarget(int t){
+        int closestSlot = -1;
+        for(int i = 0; i<indexSlots.length; i++){
+            int relativeTargetPos = (2*TICKSBETWEENLOCS*(i));
+            int closestSlotPos = (2*TICKSBETWEENLOCS*(closestSlot));
+            if(indexSlots[i].getColor() == t && (closestSlot == -1 || Math.abs(currentPosition-((currentRevs * TICKSPERREV) + relativeTargetPos)) < Math.abs(currentPosition-((currentRevs * TICKSPERREV) + closestSlotPos)))){
+                closestSlot = i;
+            }
+        }
+        if(closestSlot == -1){
+            targetPos = currentPosition;
+        }else{
+            toShoot(closestSlot);
+        }
+    }
+    public void toShootClosest(){
+        int closestSlot = -1;
+        for(int i = 0; i < indexSlots.length; i++){
+            int relativeTargetPos = (2*TICKSBETWEENLOCS*(i));
+            int closestSlotPos = (2*TICKSBETWEENLOCS*(closestSlot));
+            if(indexSlots[i].hasColor() && (closestSlot == -1 || Math.abs(currentPosition-((currentRevs * TICKSPERREV) + relativeTargetPos)) < Math.abs(currentPosition-((currentRevs * TICKSPERREV) + closestSlotPos)))){
+                closestSlot = i;
+            }
+        }
+        if(closestSlot == -1){
+            targetPos = currentPosition;
+        }else{
+            toShoot(closestSlot);
+        }
+    }
     public void toShoot(int slot){
         int relativeTargetPos = 2 * TICKSBETWEENLOCS * (slot);
         currentSlot = slot;
@@ -107,10 +142,14 @@ public class Index {
             spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             spindexer.setPower(resetSpeed);
         }
+        spindexer.setPower(0);
+        targetPos = 0;
         spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
-
+    public boolean isAtPosition(){
+        return Math.abs(currentPosition-targetPos) < tolerance;
+    }
     public boolean ballDetected(){
         return colorSense.ballDetected();
     }
@@ -126,6 +165,14 @@ public class Index {
         isSensing = false;
         return true;
     }
+    public boolean isEmpty(){
+        for(int i = 0; i< indexSlots.length; i++){
+            if(indexSlots[i].getColor() != 0){
+                return false;
+            }
+        }
+        return true;
+    }
     public void setIsSensing(boolean b){
         isSensing = b;
     }
@@ -133,7 +180,9 @@ public class Index {
     public void update(){
         currentRevs = currentPosition/TICKSPERREV;
         colorSense.update();
-        if(isSensing & colorSense.ballDetected()){
+        if(isSensing & colorSense.ballDetected() && isAtPosition()){
+            intakeDelay.reset();
+            while(intakeDelay.milliseconds() < delay){}
             indexSlots[currentSlot].setColor(colorSense.getColor());
         }
         double pid = 0;
@@ -155,6 +204,10 @@ public class Index {
         dashboardTelemetry.addData("pid output", pid);
         dashboardTelemetry.addData("reset triggered", resetSensor.isPressed());
         dashboardTelemetry.addData("isMoving", isMoving);
+        dashboardTelemetry.addData("current slot", currentSlot);
+        dashboardTelemetry.addData("Slot0", indexSlots[0].getColor());
+        dashboardTelemetry.addData("Slot1", indexSlots[1].getColor());
+        dashboardTelemetry.addData("Slot2", indexSlots[2].getColor());
     }
 
     private double limiter(double input, double limiter){
@@ -179,8 +232,12 @@ public class Index {
         public int getColor(){
             return color;
         }
+        public boolean hasColor(){
+            return color == 1 || color == 2;
+        }
         public void setColor(int c){
             color = c;
         }
+
     }
 }

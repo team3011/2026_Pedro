@@ -1,11 +1,11 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.subsystems;
 
 import com.bylazar.configurables.annotations.Configurable;
-import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
-import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
 @Configurable
 public class SuperSystem {
     Index index;
@@ -14,11 +14,14 @@ public class SuperSystem {
     Shooter shooter;
     MyLimeLight limelight;
     Servo blinkin;
+    TelemetryManager dashboardTelemetry;
     private boolean isAiming = false;
     private boolean shootReady = false;
     private boolean holdPosition = false;
     private boolean isIntaking = false;
+    private boolean intakeForceStop = false;
     private boolean isScanning = false;
+    private boolean orderToShoot = false;
     private int aimDirection;
     public static int toggleState = 0;
     private double xLeftLimit = -0.1;
@@ -31,6 +34,8 @@ public class SuperSystem {
         shooter = new Shooter(hardwareMap);
         limelight = new MyLimeLight(hardwareMap, dashboard);
         blinkin = hardwareMap.get(Servo.class, "abrahamBlinkin");
+        dashboardTelemetry = dashboard;
+        reset();
     }
     public void startIntaking(){
         isIntaking = true;
@@ -40,13 +45,16 @@ public class SuperSystem {
         shooterOn();
         isAiming = true;
     }
+    public void shoot(){
+        orderToShoot = true;
+    }
 
     public void reset(){
         index.reset();
     }
 
     public void shooterOn(){
-        shooter.setShooterPower(shooterPower);
+        shooter.startShooter();
         shooter.defaultShooterPos();
     }
 
@@ -66,17 +74,27 @@ public class SuperSystem {
         }
         setLED();
     }
+    public void forceStopIntake(){
+        intakeForceStop = true;
+    }
+    public boolean intakeIsBusy(){
+        return isIntaking;
+    }
 
     public void update(){
         if(isIntaking){
             intake.spinIntake();
             index.setIsSensing(true);
+            index.toPickupTarget(0);
             if(index.currentSlotStatus()){
                 index.toPickupTarget(0);
-                if(index.isFull()){
-                    isIntaking = false;
-                    intake.stopIntake();
-                }
+            }
+            if(index.isFull() || intakeForceStop){
+                isIntaking = false;
+                intakeForceStop = false;
+                index.setIsSensing(false);
+//                index.reset();
+                intake.stopIntake();
             }
         }
         if(isAiming){
@@ -91,9 +109,31 @@ public class SuperSystem {
                 holdPosition = true;
             }
         }
-        if(shootReady){
-
+//        if(shootReady && orderToShoot){
+        if(orderToShoot){
+            shooter.startShooter();
+            if(!index.isEmpty()) {
+                if (toggleState == 1 || toggleState == 2) {
+                    index.toShootTarget(toggleState);
+                    if(index.isAtPosition()){
+                        ejector.quickfire();
+                    }
+                }else if(toggleState == 0){
+                    index.toShootClosest();
+                    if(index.isAtPosition()){
+                        ejector.quickfire();
+                    }
+                }
+            }else{
+                shooter.stopShooter();
+                shootReady = false;
+                holdPosition = false;
+                orderToShoot = false;
+            }
         }
+        dashboardTelemetry.addData("isIntaking", isIntaking);
+        dashboardTelemetry.addData("forcestop", intakeForceStop);
+        dashboardTelemetry.addData("shoot ordered?", orderToShoot);
         setLED();
         index.update();
         ejector.update();
@@ -101,7 +141,6 @@ public class SuperSystem {
         shooter.update();
         limelight.update();
     }
-
     public int getAimDirection(){
         return aimDirection;
     }

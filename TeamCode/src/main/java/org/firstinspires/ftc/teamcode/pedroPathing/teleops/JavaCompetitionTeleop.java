@@ -75,21 +75,11 @@ public abstract class JavaCompetitionTeleop extends OpMode {
         dashboardTelemetry.addData("direction facing", drive.getHeadingToMaintain());
         dashboardTelemetry.update();
         if (!superSystem.getAimStatus() && !superSystem.holdingPosition()){
-            drive.drive2(digitalTransmission(left_x), digitalTransmission(left_y), -right_x);
+            drive.drive2(digitalTransmission(-left_x), digitalTransmission(-left_y), right_x);
         }else if(superSystem.getAimStatus()){
             drive.drive2(digitalTransmission(0), digitalTransmission(0), rotSpeed* superSystem.getAimDirection());
         }else if(superSystem.holdingPosition()){
             drive.drive2(0,0,0);
-        }
-
-        if (this.g1.wasJustPressed(GamepadKeys.Button.A)) { //really X
-            drive.setHeadingToMaintain(0); // 180 degrees???
-        } else if (this.g1.wasJustPressed(GamepadKeys.Button.B)) { //really O
-            drive.setHeadingToMaintain(90);
-        } else if (this.g1.wasJustPressed(GamepadKeys.Button.Y)) { //really ^
-            drive.setHeadingToMaintain(180);
-        } else if (this.g1.wasJustPressed(GamepadKeys.Button.X)) { ////really []
-            drive.setHeadingToMaintain(-90);
         }
 
         if (g1.wasJustPressed(GamepadKeys.Button.LEFT_BUMPER)){
@@ -97,17 +87,44 @@ public abstract class JavaCompetitionTeleop extends OpMode {
         }
 
         if (g1.isDown(GamepadKeys.Button.RIGHT_BUMPER)){
-            if (this.g1.isDown(GamepadKeys.Button.A)) {
+            if (this.g1.wasJustPressed(GamepadKeys.Button.A)) {
                 superSystem.reset();
-            }else if(this.g1.isDown(GamepadKeys.Button.B)){
-
-            }else if(this.g1.isDown(GamepadKeys.Button.X)){
-                superSystem.startIntaking();
-            }else if(this.g1.isDown(GamepadKeys.Button.Y)){
+            }else if(this.g1.wasJustPressed(GamepadKeys.Button.B)){
+                superSystem.shoot();
+            }else if(this.g1.wasJustPressed(GamepadKeys.Button.X)){
+                if(!superSystem.intakeIsBusy()){
+                    superSystem.startIntaking();
+                }else{
+                    superSystem.forceStopIntake();
+                }
+            }else if(this.g1.wasJustPressed(GamepadKeys.Button.Y)){
+                if(getAllianceColor().equals(AllianceColor.RED)) {
+                    drive.setHeadingToMaintain(45);
+                }else if(getAllianceColor().equals(AllianceColor.BLUE)){
+                    drive.setHeadingToMaintain(-45);
+                }
                 superSystem.aimShooter();
+            }
+        }else{
+            if (this.g1.wasJustPressed(GamepadKeys.Button.A)) { //really X
+                drive.setHeadingToMaintain(0); // 180 degrees???
+            } else if (this.g1.wasJustPressed(GamepadKeys.Button.B)) { //really O
+                drive.setHeadingToMaintain(90);
+            } else if (this.g1.wasJustPressed(GamepadKeys.Button.Y)) { //really ^
+                drive.setHeadingToMaintain(180);
+            } else if (this.g1.wasJustPressed(GamepadKeys.Button.X)) { ////really []
+                drive.setHeadingToMaintain(-90);
             }
         }
         superSystem.update();
+        dashboardTelemetry.addData("right bumper", g1.isDown(GamepadKeys.Button.RIGHT_BUMPER));
+        double yaw = drive.calcYaw();
+        dashboardTelemetry.addData("yaw", yaw);
+        dashboardTelemetry.addData("shorter", drive.figureOutWhatIsShorter(Math.toDegrees(yaw)));
+        dashboardTelemetry.addData("rotspeed", drive.getRotSpeed());
+        dashboardTelemetry.addData("leftx", left_x);
+        dashboardTelemetry.addData("lefty", left_y);
+//        dashboardTelemetry.addData("fl Pow", drive.getFlPow());
         dashboardTelemetry.update();
     }
 
@@ -119,7 +136,7 @@ public abstract class JavaCompetitionTeleop extends OpMode {
     }
 
     private double zeroAnalogInput(double input){
-        if (Math.abs(input) < 0.05){
+        if (Math.abs(input) < 0.2){
             input = 0;
         }
         return input;

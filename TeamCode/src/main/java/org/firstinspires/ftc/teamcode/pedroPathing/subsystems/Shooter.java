@@ -1,16 +1,20 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.subsystems;
 
 import com.bylazar.configurables.annotations.Configurable;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
+
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+
 @Configurable
 public class Shooter {
 
-    public static double shooterPow = 0;
-
-    public static double shooterPos = 0.4;
+    public static double shooterSpeed = 0;
+    public static double defaultShooterSpeed = 6000;
+    public static double shooterPos = 0.6;
     DcMotorEx shooterL;
     DcMotorEx shooterR;
     Servo pivotL;
@@ -20,17 +24,21 @@ public class Shooter {
         shooterL = hardwareMap.get(DcMotorEx.class, "leftShooter");
         shooterR = hardwareMap.get(DcMotorEx.class, "rightShooter");
         shooterR.setDirection(DcMotorSimple.Direction.REVERSE);
+        shooterL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        shooterR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         pivotL = hardwareMap.get(Servo.class, "leftPivot");
         pivotR = hardwareMap.get(Servo.class, "rightPivot");
         pivotR.setDirection(Servo.Direction.REVERSE);
     }
 
-    public void setShooterPower(double p){
-        shooterPow = p;
+    public void setShooterSpeed(double p){
+        shooterSpeed = p;
     }
-
+    public void startShooter(){
+        shooterSpeed = defaultShooterSpeed;
+    }
     public void stopShooter(){
-        shooterPow = 0;
+        shooterSpeed = 0;
     }
 
     public void setShooterPos(double pos){
@@ -38,12 +46,13 @@ public class Shooter {
     }
 
     public void defaultShooterPos(){
-        shooterPos = 0.4;
+        shooterPos = 0.6;
     }
 
     public void update(){
-        shooterL.setPower(shooterPow);
-        shooterR.setPower(shooterPow);
+        double speed = shooterSpeed / 6;
+        shooterL.setVelocity(speed, AngleUnit.DEGREES);
+        shooterR.setVelocity(speed, AngleUnit.DEGREES);
 
         pivotL.setPosition(shooterPos);
         pivotR.setPosition(shooterPos);

@@ -1,17 +1,19 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.subsystems;
 
 
+import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 // referenced https://gm0.org/en/latest/docs/software/tutorials/mecanum-drive.html
-
+@Configurable
 public class MecanumDrive {
-    public static double correctionMultiplier = 1;
+    public static double correctionMultiplier = 0.2;
     public static double ANGULAR_TOLERANCE_DEGREES = 2;
     public static double rotMulti = 1.1;
+    public static double defaultRotSpeed = 0.2;
     private final DcMotorEx leftFront, leftBack, rightBack, rightFront;
     public GoBildaPinpointDriver pinpoint;
     private double headingToMaintain = 0;
@@ -19,7 +21,8 @@ public class MecanumDrive {
     public double rotation_multi = 0.5;
     //acceptable angle tolerance in radians
     public double ANGULAR_TOLERANCE = Math.PI/90;
-
+    public double flPow;
+    public double rotSpeed;
     public MecanumDrive(HardwareMap hardwareMap){
         leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
         leftBack = hardwareMap.get(DcMotorEx.class, "leftRear");
@@ -120,26 +123,29 @@ public class MecanumDrive {
                 if (Math.abs(y) > 0 || Math.abs(x) > 0) {
                     double rotSpeed = Math.abs(shorter);
                     if (rotSpeed > 20) {
-                        rotSpeed = 1;
+                        rotSpeed = defaultRotSpeed;
                     } else {
                         rotSpeed = correctionMultiplier * rotSpeed * rotSpeed / 800.0;
                     }
                     rx = limiter(shorter, rotSpeed);
+                    this.rotSpeed = rx;
                 } else {
                     //this means we are not moving but not pointing in the right direction
                     double rotSpeed = Math.abs(shorter);
                     if (rotSpeed > 20) {
-                        rotSpeed = 1;
+                        rotSpeed = defaultRotSpeed;
                     } else {
                         rotSpeed = 2 * correctionMultiplier * rotSpeed * rotSpeed / 800.0;
                     }
                     rx = limiter(shorter, rotSpeed);
+                    this.rotSpeed = rx;
                 }
             }
         }else{
             //we're going to maintain our new heading once we've stopped turning.
             //not before we've turned
             this.headingToMaintain = robotHeadingDEG;
+            rotSpeed = rx;
         }
         //triangle """magic"""
         double rotX = x * Math.cos(-robotHeadingRAD) - y * Math.sin(-robotHeadingRAD);
@@ -157,6 +163,7 @@ public class MecanumDrive {
         double frontRightPower = (rotY - rotX - rx) / denominator;
         double backLeftPower = (rotY - rotX + rx)   / denominator;
         double backRightPower = (rotY + rotX - rx)  / denominator;
+//        flPow = backRightPower;
 
         leftBack.setPower(backLeftPower);
         rightBack.setPower(backRightPower);
@@ -171,5 +178,10 @@ public class MecanumDrive {
     public double getHeadingToMaintain(){
         return headingToMaintain;
     }
-
+    public double getFlPow(){
+        return flPow;
+    }
+    public double getRotSpeed(){
+        return rotSpeed;
+    }
 }

@@ -50,11 +50,12 @@ public class ColorSense {
         dashboardTelemetry.addData("Hue", hue);
         dashboardTelemetry.addData("Hue2", hue2);
         dashboardTelemetry.addData("Alpha", colors.alpha);
+        dashboardTelemetry.addData("Alpha2", colors2.alpha);
 
-        if(hue >= 150 && hue <= 180 || hue2 >= 150 && hue2 <= 180){
+        if(((colors.alpha < 0.99 && colors.alpha > 0.8) && (hue >= 150 && hue <= 175)) || ((hue2 >= 150 && hue2 <= 175) && (colors2.alpha < 0.99 && colors2.alpha > 0.8))){
             dashboardTelemetry.addData("Detected", "Green");
             color = 2;
-        }else if(hue >= 210 && hue <= 240 || hue2 >= 210 && hue2 <= 240){
+        }else if(((colors.alpha < 0.99 && colors.alpha > 0.8) && (hue >= 215 && hue <= 230)) || ((hue2 >= 215 && hue2 <= 230) && (colors2.alpha < 0.99 && colors2.alpha > 0.8))){
             dashboardTelemetry.addData("Detected", "Purple");
             color = 1;
         }else if(colors.alpha < 0.1){

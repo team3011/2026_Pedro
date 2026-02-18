@@ -13,6 +13,7 @@ public class Intake {
     public Intake(HardwareMap hardwareMap){
         intakeMotor = hardwareMap.get(DcMotor.class, "intakeMotor");
         intakeMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        motorPow = 0;
     }
 
     public void spinIntake(){

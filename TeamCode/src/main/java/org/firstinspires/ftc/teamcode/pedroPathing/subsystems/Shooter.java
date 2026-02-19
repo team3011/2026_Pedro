@@ -12,10 +12,10 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 @Configurable
 public class Shooter {
-
     public static double shooterSpeed = 0;
-    public static double defaultShooterSpeed = 5000;
+    public static double defaultShooterSpeed = 170;
     public static double shooterPos = 0.6;
+    private boolean isSpunUp;
     DcMotorEx shooterL;
     DcMotorEx shooterR;
     Servo pivotL;
@@ -50,11 +50,16 @@ public class Shooter {
     public void defaultShooterPos(){
         shooterPos = 0.6;
     }
+    public boolean isSpunUp(){
+        return isSpunUp;
+    }
 
     public void update(){
         double speed = shooterSpeed * 6;
         shooterL.setVelocity(speed, AngleUnit.DEGREES);
         shooterR.setVelocity(speed, AngleUnit.DEGREES);
+
+        isSpunUp = Math.abs(speed-shooterL.getVelocity(AngleUnit.DEGREES)) < 30 && Math.abs(speed-shooterR.getVelocity(AngleUnit.DEGREES)) < 30;
 
         pivotL.setPosition(shooterPos);
         pivotR.setPosition(shooterPos);

@@ -20,9 +20,11 @@ public class SuperSystem {
     private boolean holdPosition = false;
     private boolean isIntaking = false;
     private boolean intakeForceStop = false;
+    private boolean aimForceStop = false;
     private boolean isScanning = false;
     private boolean orderToShoot = false;
     private int aimDirection;
+    private double headingToMaintain;
     public static int toggleState = 0;
     public static double xLeftLimit = -6;
     public static double xRightLimit = 4;
@@ -43,6 +45,7 @@ public class SuperSystem {
 
     public void aimShooter(){
         shooterOn();
+        aimForceStop = false;
         isAiming = true;
     }
     public void shoot(){
@@ -84,6 +87,10 @@ public class SuperSystem {
     public boolean intakeIsBusy(){
         return isIntaking;
     }
+    public void reverseIntake(){
+        intake.reverseIntake();
+        isIntaking = false;
+    }
 
     public void update(){
         if(isIntaking){
@@ -104,13 +111,18 @@ public class SuperSystem {
         if(isAiming){
             if (limelight.getxLoc() < xLeftLimit){ //robot moves left
                 aimDirection = -1;
-            } else if (limelight.getxLoc() > xRightLimit){ //robot moves right
+            }else if (limelight.getxLoc() > xRightLimit){ //robot moves right
                 aimDirection = 1;
             }else{
                 aimDirection = 0;
                 shootReady = true;
-                isAiming = false;
+//                isAiming = false;
                 holdPosition = true;
+            }
+            if(aimForceStop){
+                limelight.stop();
+                isAiming = false;
+                aimForceStop = false;
             }
         }
 //        if(shootReady && orderToShoot){
@@ -119,13 +131,13 @@ public class SuperSystem {
             if(!index.isEmpty()) {
                 if (toggleState == 1 || toggleState == 2) {
                     index.toShootTarget(toggleState);
-                    if(index.isAtPosition()){
+                    if(index.isAtPosition() && shooter.isSpunUp()){
                         ejector.quickfire();
                         index.emptyCurrentSlot();
                     }
                 }else if(toggleState == 0){
                     index.toShootClosest();
-                    if(index.isAtPosition()){
+                    if(index.isAtPosition() && shooter.isSpunUp()){
                         ejector.quickfire();
                         index.emptyCurrentSlot();
                     }
@@ -135,11 +147,14 @@ public class SuperSystem {
                 shootReady = false;
                 holdPosition = false;
                 orderToShoot = false;
+                isAiming = false;
             }
         }
         dashboardTelemetry.addData("isIntaking", isIntaking);
         dashboardTelemetry.addData("forcestop", intakeForceStop);
         dashboardTelemetry.addData("shoot ordered?", orderToShoot);
+        dashboardTelemetry.addData("aimDir", aimDirection);
+        dashboardTelemetry.addData("aim state", getAimStatus());
         setLED();
         index.update();
         ejector.update();
@@ -152,6 +167,12 @@ public class SuperSystem {
     }
     public boolean getAimStatus(){
         return isAiming;
+    }
+    public boolean getIsIntaking(){
+        return isIntaking;
+    }
+    public void forceStopAiming(){
+        aimForceStop = true;
     }
     public boolean holdingPosition(){
         return holdPosition;

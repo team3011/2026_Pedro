@@ -19,7 +19,7 @@ public class Intake {
     public void spinIntake(){
         motorPow = 1;
     }
-
+    public void reverseIntake(){motorPow = -1;}
     public void stopIntake(){
         motorPow = 0;
     }

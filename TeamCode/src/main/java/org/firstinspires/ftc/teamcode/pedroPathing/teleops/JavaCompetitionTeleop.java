@@ -26,7 +26,9 @@ public abstract class JavaCompetitionTeleop extends OpMode {
     MecanumDrive drive;
     GamepadEx g1;
     SuperSystem superSystem;
-    private double rotSpeed = 1;
+    private double rotSpeed = 0.15;
+    private boolean snappingToHeading = false;
+    private double snapTargetDeg = 0;
     /*     * Code to run ONCE when the driver hits INIT
      */
     @Override
@@ -71,20 +73,42 @@ public abstract class JavaCompetitionTeleop extends OpMode {
         right_x = zeroAnalogInput(g1.getRightX());
         left_t = -zeroAnalogInput(g1.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER));
         right_t = zeroAnalogInput(g1.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER));
+//        superSystem.findTargetHeading(drive.getHeadingToMaintain());
 
         dashboardTelemetry.addData("Status", "Run Time: " + runtime.toString());
         dashboardTelemetry.addData("direction facing", drive.getHeadingToMaintain());
         dashboardTelemetry.update();
-        if (!superSystem.getAimStatus() && !superSystem.holdingPosition()){
-            drive.drive2(digitalTransmission(-left_x), digitalTransmission(-left_y), right_x);
-        }else if(superSystem.getAimStatus()){
-            drive.drive2(digitalTransmission(0), digitalTransmission(0), rotSpeed * superSystem.getAimDirection());
-        }else if(superSystem.holdingPosition()){
-            drive.drive2(0,0,0);
-        }
+//        if (!superSystem.getAimStatus() && !superSystem.holdingPosition() && !superSystem.getIsIntaking()){
+//            drive.drive2(digitalTransmission(-left_x), digitalTransmission(-left_y), right_x);
+//        }else if(superSystem.getAimStatus()){
+//            drive.drive2(digitalTransmission(0), digitalTransmission(0), rotSpeed * superSystem.getAimDirection());
+//        }else if(superSystem.holdingPosition()){
+//            drive.drive2(0,0,0);
+//        }else if(superSystem.getIsIntaking()){
+//            drive.drive2(digitalTransmission(-left_x)/2, digitalTransmission(-left_y)/2, right_x/2);
+//        }
 
         if (g1.wasJustPressed(GamepadKeys.Button.LEFT_BUMPER)){
             superSystem.toggle();
+        }
+
+        if (superSystem.getAimStatus()) {
+            drive.drive2(0, 0, rotSpeed * superSystem.getAimDirection());
+        } else if (superSystem.holdingPosition()) {
+            drive.drive2(0, 0, 0);
+        } else if (superSystem.getIsIntaking()) {
+            drive.drive2(digitalTransmission(-left_x)/2, digitalTransmission(-left_y)/2, right_x/2);
+        } else if (snappingToHeading && !g1.isDown(GamepadKeys.Button.RIGHT_BUMPER)) {
+            double error = snapTargetDeg - drive.getHeadingInDEG();
+            while (error > 180) error -= 360;
+            while (error < -180) error += 360;
+            if (Math.abs(error) < 3.0) {
+                snappingToHeading = false;
+            } else {
+                drive.rotateToHeading(snapTargetDeg, digitalTransmission(-left_x), digitalTransmission(-left_y));
+            }
+        } else {
+            drive.drive2(digitalTransmission(-left_x), digitalTransmission(-left_y), right_x);
         }
 
         if (g1.isDown(GamepadKeys.Button.RIGHT_BUMPER)){
@@ -99,30 +123,53 @@ public abstract class JavaCompetitionTeleop extends OpMode {
                     superSystem.forceStopIntake();
                 }
             }else if(this.g1.wasJustPressed(GamepadKeys.Button.Y)){
-                if(getAllianceColor().equals(AllianceColor.RED)) {
-                    drive.setHeadingToMaintain(-45);
-                    superSystem.startLimelight(1);
-                }else if(getAllianceColor().equals(AllianceColor.BLUE)){
-                    drive.setHeadingToMaintain(45);
-                    superSystem.startLimelight(0);
+                if(!superSystem.getAimStatus()) {
+                    if (getAllianceColor().equals(AllianceColor.RED)) {
+                        drive.setHeadingToMaintain(-45);
+                        superSystem.startLimelight(1);
+                    } else if (getAllianceColor().equals(AllianceColor.BLUE)) {
+                        drive.setHeadingToMaintain(45);
+                        superSystem.startLimelight(0);
+                    }
+                    superSystem.aimShooter();
+                }else{
+                    superSystem.forceStopAiming();
                 }
-                superSystem.aimShooter();
+            }else if(this.g1.wasJustPressed(GamepadKeys.Button.DPAD_LEFT)){
+                superSystem.reverseIntake();
             }
         }else{
-            if (this.g1.wasJustPressed(GamepadKeys.Button.A)) { //really X
-                drive.setHeadingToMaintain(0); // 180 degrees???
-            } else if (this.g1.wasJustPressed(GamepadKeys.Button.B)) { //really O
-                drive.setHeadingToMaintain(90);
-            } else if (this.g1.wasJustPressed(GamepadKeys.Button.Y)) { //really ^
-                drive.setHeadingToMaintain(180);
-            } else if (this.g1.wasJustPressed(GamepadKeys.Button.X)) { ////really []
-                drive.setHeadingToMaintain(-90);
+//            if (this.g1.wasJustPressed(GamepadKeys.Button.A)) { //really X
+//                drive.rotateToHeading(0,digitalTransmission(-left_x), digitalTransmission(-left_y)); // 180 degrees???
+//            } else if (this.g1.wasJustPressed(GamepadKeys.Button.B)) { //really O
+//                drive.rotateToHeading(90,digitalTransmission(-left_x), digitalTransmission(-left_y));
+//            } else if (this.g1.wasJustPressed(GamepadKeys.Button.Y)) { //really ^
+//                drive.rotateToHeading(180,digitalTransmission(-left_x), digitalTransmission(-left_y));
+//            } else if (this.g1.wasJustPressed(GamepadKeys.Button.X)) { ////really []
+//                drive.rotateToHeading(-90,digitalTransmission(-left_x), digitalTransmission(-left_y));
+//            }
+            if (this.g1.wasJustPressed(GamepadKeys.Button.A)) {
+                snappingToHeading = true;
+                snapTargetDeg = 0;
+            } else if (this.g1.wasJustPressed(GamepadKeys.Button.B)) {
+                snappingToHeading = true;
+                snapTargetDeg = 90;
+            } else if (this.g1.wasJustPressed(GamepadKeys.Button.Y)) {
+                snappingToHeading = true;
+                snapTargetDeg = 180;
+            } else if (this.g1.wasJustPressed(GamepadKeys.Button.X)) {
+                snappingToHeading = true;
+                snapTargetDeg = -90;
+            }
+            if (Math.abs(right_x) > 0.2) {
+                snappingToHeading = false;
             }
         }
         superSystem.update();
         dashboardTelemetry.addData("right bumper", g1.isDown(GamepadKeys.Button.RIGHT_BUMPER));
         double yaw = drive.calcYaw();
         dashboardTelemetry.addData("yaw", yaw);
+        dashboardTelemetry.addData("yaw in degrees", drive.getHeadingInDEG());
         dashboardTelemetry.addData("shorter", drive.figureOutWhatIsShorter(Math.toDegrees(yaw)));
         dashboardTelemetry.addData("rotspeed", drive.getRotSpeed());
         dashboardTelemetry.addData("headingToMaintain", drive.getHeadingToMaintain());

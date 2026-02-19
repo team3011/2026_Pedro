@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.subsystems;
 
 import com.bylazar.configurables.annotations.Configurable;
+import com.bylazar.telemetry.TelemetryManager;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -13,14 +14,14 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 public class Shooter {
 
     public static double shooterSpeed = 0;
-    public static double defaultShooterSpeed = 6000;
+    public static double defaultShooterSpeed = 5000;
     public static double shooterPos = 0.6;
     DcMotorEx shooterL;
     DcMotorEx shooterR;
     Servo pivotL;
     Servo pivotR;
-
-    public Shooter(HardwareMap hardwareMap){
+    TelemetryManager dashboardTelemetry;
+    public Shooter(HardwareMap hardwareMap, TelemetryManager dashboard){
         shooterL = hardwareMap.get(DcMotorEx.class, "leftShooter");
         shooterR = hardwareMap.get(DcMotorEx.class, "rightShooter");
         shooterR.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -29,6 +30,7 @@ public class Shooter {
         pivotL = hardwareMap.get(Servo.class, "leftPivot");
         pivotR = hardwareMap.get(Servo.class, "rightPivot");
         pivotR.setDirection(Servo.Direction.REVERSE);
+        dashboardTelemetry = dashboard;
     }
 
     public void setShooterSpeed(double p){
@@ -50,11 +52,13 @@ public class Shooter {
     }
 
     public void update(){
-        double speed = shooterSpeed / 6;
+        double speed = shooterSpeed * 6;
         shooterL.setVelocity(speed, AngleUnit.DEGREES);
         shooterR.setVelocity(speed, AngleUnit.DEGREES);
 
         pivotL.setPosition(shooterPos);
         pivotR.setPosition(shooterPos);
+        dashboardTelemetry.addData("shooterL Velocity", shooterR.getVelocity(AngleUnit.DEGREES)/6);
+        dashboardTelemetry.addData("shooterR Velocity", shooterL.getVelocity(AngleUnit.DEGREES)/6);
     }
 }

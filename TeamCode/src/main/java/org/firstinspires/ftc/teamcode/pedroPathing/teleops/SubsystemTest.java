@@ -11,6 +11,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.pedroPathing.subsystems.Ejector;
 import org.firstinspires.ftc.teamcode.pedroPathing.subsystems.Index;
 import org.firstinspires.ftc.teamcode.pedroPathing.subsystems.Intake;
+import org.firstinspires.ftc.teamcode.pedroPathing.subsystems.MyLimeLight;
 import org.firstinspires.ftc.teamcode.pedroPathing.subsystems.Shooter;
 
 @Configurable       //if you want configurable constants
@@ -23,8 +24,10 @@ public class SubsystemTest extends OpMode {
     Shooter shooter;
     Ejector ejector;
     Index index;
+    MyLimeLight ll;
     //this section allows us to access telemetry data from a browser
     public static int targSlot = 0;
+    public static int pipeline = 0;
     PanelsTelemetry dashboard = PanelsTelemetry.INSTANCE;
     TelemetryManager dashboardTelemetry = dashboard.getTelemetry();
     public boolean logger = true;
@@ -37,8 +40,9 @@ public class SubsystemTest extends OpMode {
         dashboardTelemetry.addData("Status", "Initialized");
         intake = new Intake(hardwareMap);
         ejector = new Ejector(hardwareMap);
-        shooter = new Shooter(hardwareMap);
+        shooter = new Shooter(hardwareMap, dashboardTelemetry);
         index = new Index(hardwareMap, dashboardTelemetry);
+        ll = new MyLimeLight(hardwareMap,dashboardTelemetry);
         // Initialize the hardware variables. Note that the strings used here as parameters
         // to 'get' must correspond to the names assigned during the robot configuration
         // step
@@ -61,6 +65,7 @@ public class SubsystemTest extends OpMode {
     public void start() {
         index.reset();
         runtime.reset();
+        ll.start(pipeline);
     }
 
     /*
@@ -72,11 +77,12 @@ public class SubsystemTest extends OpMode {
 //            dashboardTelemetry.addData("sensed time", runtime.milliseconds());
 //        }
         dashboardTelemetry.addData("Status", "Run Time: " + runtime.toString());
-        index.toPickupTarget(targSlot);
+        index.toShootTarget(targSlot);
         index.update();
         shooter.update();
         ejector.update();
         intake.update();
+        ll.update();
         dashboardTelemetry.update();
     }
 

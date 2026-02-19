@@ -33,6 +33,9 @@ public class MyLimeLight {
             xLoc = result.getTx();
             yLoc = result.getTy();
             area = result.getTa();
+            dashboardTelemetry.addData("xLoc", xLoc);
+            dashboardTelemetry.addData("yLoc", yLoc);
+            dashboardTelemetry.addData("Ta", area);
             return true;
         }
         return false;

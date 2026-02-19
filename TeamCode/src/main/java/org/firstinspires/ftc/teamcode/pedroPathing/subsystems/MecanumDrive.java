@@ -10,10 +10,11 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 // referenced https://gm0.org/en/latest/docs/software/tutorials/mecanum-drive.html
 @Configurable
 public class MecanumDrive {
-    public static double correctionMultiplier = 0.2;
+    public static double correctionMultiplier = 0.001;
     public static double ANGULAR_TOLERANCE_DEGREES = 2;
     public static double rotMulti = 1.1;
-    public static double defaultRotSpeed = 0.2;
+    public static double defaultRotSpeed = 0.3;
+    public static int maximumCorrectionThreshold = 10;
     private final DcMotorEx leftFront, leftBack, rightBack, rightFront;
     public GoBildaPinpointDriver pinpoint;
     private double headingToMaintain = 0;
@@ -122,7 +123,7 @@ public class MecanumDrive {
                 //this means we are moving
                 if (Math.abs(y) > 0 || Math.abs(x) > 0) {
                     double rotSpeed = Math.abs(shorter);
-                    if (rotSpeed > 20) {
+                    if (rotSpeed > maximumCorrectionThreshold) {
                         rotSpeed = defaultRotSpeed;
                     } else {
                         rotSpeed = correctionMultiplier * rotSpeed * rotSpeed / 800.0;
@@ -132,7 +133,7 @@ public class MecanumDrive {
                 } else {
                     //this means we are not moving but not pointing in the right direction
                     double rotSpeed = Math.abs(shorter);
-                    if (rotSpeed > 20) {
+                    if (rotSpeed > maximumCorrectionThreshold) {
                         rotSpeed = defaultRotSpeed;
                     } else {
                         rotSpeed = 2 * correctionMultiplier * rotSpeed * rotSpeed / 800.0;

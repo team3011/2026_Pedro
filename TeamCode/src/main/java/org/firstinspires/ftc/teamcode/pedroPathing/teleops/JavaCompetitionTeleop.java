@@ -26,7 +26,7 @@ public abstract class JavaCompetitionTeleop extends OpMode {
     MecanumDrive drive;
     GamepadEx g1;
     SuperSystem superSystem;
-    private double rotSpeed = 0.5;
+    private double rotSpeed = 1;
     /*     * Code to run ONCE when the driver hits INIT
      */
     @Override
@@ -38,6 +38,7 @@ public abstract class JavaCompetitionTeleop extends OpMode {
         // to 'get' must correspond to the names assigned during the robot configuration
         // step
         superSystem = new SuperSystem(hardwareMap, dashboardTelemetry);
+        superSystem.shooterOff();
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Initialized");
     }
@@ -77,7 +78,7 @@ public abstract class JavaCompetitionTeleop extends OpMode {
         if (!superSystem.getAimStatus() && !superSystem.holdingPosition()){
             drive.drive2(digitalTransmission(-left_x), digitalTransmission(-left_y), right_x);
         }else if(superSystem.getAimStatus()){
-            drive.drive2(digitalTransmission(0), digitalTransmission(0), rotSpeed* superSystem.getAimDirection());
+            drive.drive2(digitalTransmission(0), digitalTransmission(0), rotSpeed * superSystem.getAimDirection());
         }else if(superSystem.holdingPosition()){
             drive.drive2(0,0,0);
         }
@@ -99,9 +100,11 @@ public abstract class JavaCompetitionTeleop extends OpMode {
                 }
             }else if(this.g1.wasJustPressed(GamepadKeys.Button.Y)){
                 if(getAllianceColor().equals(AllianceColor.RED)) {
-                    drive.setHeadingToMaintain(45);
-                }else if(getAllianceColor().equals(AllianceColor.BLUE)){
                     drive.setHeadingToMaintain(-45);
+                    superSystem.startLimelight(1);
+                }else if(getAllianceColor().equals(AllianceColor.BLUE)){
+                    drive.setHeadingToMaintain(45);
+                    superSystem.startLimelight(0);
                 }
                 superSystem.aimShooter();
             }
@@ -122,6 +125,7 @@ public abstract class JavaCompetitionTeleop extends OpMode {
         dashboardTelemetry.addData("yaw", yaw);
         dashboardTelemetry.addData("shorter", drive.figureOutWhatIsShorter(Math.toDegrees(yaw)));
         dashboardTelemetry.addData("rotspeed", drive.getRotSpeed());
+        dashboardTelemetry.addData("headingToMaintain", drive.getHeadingToMaintain());
         dashboardTelemetry.addData("leftx", left_x);
         dashboardTelemetry.addData("lefty", left_y);
 //        dashboardTelemetry.addData("fl Pow", drive.getFlPow());

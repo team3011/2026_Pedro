@@ -24,14 +24,14 @@ public class SuperSystem {
     private boolean orderToShoot = false;
     private int aimDirection;
     public static int toggleState = 0;
-    private double xLeftLimit = -0.1;
-    private double xRightLimit = 0.1;
+    public static double xLeftLimit = -6;
+    public static double xRightLimit = 4;
     public static double shooterPower = 0.9;
     public SuperSystem(HardwareMap hardwareMap, TelemetryManager dashboard){
         index = new Index(hardwareMap, dashboard);
         ejector = new Ejector(hardwareMap);
         intake = new Intake(hardwareMap);
-        shooter = new Shooter(hardwareMap);
+        shooter = new Shooter(hardwareMap, dashboard);
         limelight = new MyLimeLight(hardwareMap, dashboard);
         blinkin = hardwareMap.get(Servo.class, "abrahamBlinkin");
         dashboardTelemetry = dashboard;
@@ -50,12 +50,16 @@ public class SuperSystem {
     }
 
     public void reset(){
+        ejector.reset();
         index.reset();
     }
 
     public void shooterOn(){
         shooter.startShooter();
         shooter.defaultShooterPos();
+    }
+    public void shooterOff(){
+        shooter.stopShooter();
     }
 
     public void setLED(){
@@ -117,11 +121,13 @@ public class SuperSystem {
                     index.toShootTarget(toggleState);
                     if(index.isAtPosition()){
                         ejector.quickfire();
+                        index.emptyCurrentSlot();
                     }
                 }else if(toggleState == 0){
                     index.toShootClosest();
                     if(index.isAtPosition()){
                         ejector.quickfire();
+                        index.emptyCurrentSlot();
                     }
                 }
             }else{
@@ -149,5 +155,8 @@ public class SuperSystem {
     }
     public boolean holdingPosition(){
         return holdPosition;
+    }
+    public void startLimelight(int pl){
+        limelight.start(pl);
     }
 }

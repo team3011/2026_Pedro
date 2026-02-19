@@ -16,6 +16,7 @@ public class Ejector {
     public static int quickfireTime = 400;
     public Ejector(HardwareMap hardwareMap){
         ejector = hardwareMap.get(Servo.class, "ejector");
+        reset();
     }
 
     public void ejectorTo(double p){
@@ -28,9 +29,11 @@ public class Ejector {
         while(quickfireTimer.milliseconds() < quickfireTime){
 
         }
+        reset();
+    }
+    public void reset(){
         ejector.setPosition(defaultEjectPos);
     }
-
     public void update(){
         ejector.setPosition(ejectorPos);
     }

@@ -16,7 +16,7 @@ public class Index {
     public int TICKSBETWEENSLOTS = TICKSPERREV/3;
     public int TICKSBETWEENLOCS = TICKSPERREV/6;
     public static int tolerance = 15;
-    public static int delay = 200;
+    public static int delay = 400;
     public static double maxPower = 0.5;
     public static double minPower = 0.01;
     public static double resetSpeed = 0.3;
@@ -48,7 +48,7 @@ public class Index {
         colorSense = new ColorSense(hardwareMap, dashboard);
         controller = new PIDController(kP, kI, kD);
         for(int i = 0; i < indexSlots.length; i++){
-            indexSlots[i].setColor(0);
+            indexSlots[i].setColor(1);
         }
         dashboardTelemetry = dashboard;
     }
@@ -175,6 +175,9 @@ public class Index {
     }
     public void setIsSensing(boolean b){
         isSensing = b;
+    }
+    public void emptyCurrentSlot(){
+        indexSlots[currentSlot].setColor(0);
     }
 
     public void update(){

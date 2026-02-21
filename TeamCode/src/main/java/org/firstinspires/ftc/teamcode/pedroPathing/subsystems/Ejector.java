@@ -13,7 +13,7 @@ public class Ejector {
     public static double kickPos = .99;
     Servo ejector;
     ElapsedTime quickfireTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
-    public static int quickfireTime = 400;
+    public static int quickfireTime = 450;
     public Ejector(HardwareMap hardwareMap){
         ejector = hardwareMap.get(Servo.class, "ejector");
         reset();

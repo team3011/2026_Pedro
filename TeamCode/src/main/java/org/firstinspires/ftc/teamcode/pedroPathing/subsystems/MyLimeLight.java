@@ -10,6 +10,14 @@ public class MyLimeLight {
     private double xLoc;
     private double yLoc;
     private double area;
+    private double distance;
+    double limelightMountAngleDegrees = 0;
+
+    // distance from the center of the Limelight lens to the floor
+    double limelightLensHeightInches = 17;
+
+    // distance from the target to the floor
+    double goalHeightInches = 30;
     TelemetryManager dashboardTelemetry;
 
     public MyLimeLight(HardwareMap hardwareMap, TelemetryManager dashboard){
@@ -33,9 +41,15 @@ public class MyLimeLight {
             xLoc = result.getTx();
             yLoc = result.getTy();
             area = result.getTa();
+            double angleToGoalDegrees = limelightMountAngleDegrees + yLoc;
+            double angleToGoalRadians = angleToGoalDegrees * (3.14159 / 180.0);
+            //calculate distance
+            double distanceFromLimelightToGoalInches = (goalHeightInches - limelightLensHeightInches) / Math.tan(angleToGoalRadians);
+            this.distance = distanceFromLimelightToGoalInches;
             dashboardTelemetry.addData("xLoc", xLoc);
             dashboardTelemetry.addData("yLoc", yLoc);
             dashboardTelemetry.addData("Ta", area);
+            dashboardTelemetry.addData("distance", distanceFromLimelightToGoalInches);
             return true;
         }
         return false;
@@ -53,7 +67,9 @@ public class MyLimeLight {
         return area;
     }
 
-
+    public double getDistance(){
+        return distance;
+    }
 
 
 }

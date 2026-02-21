@@ -76,13 +76,18 @@ public class SubsystemTest extends OpMode {
 //        if(index.colorIsDetected()) {
 //            dashboardTelemetry.addData("sensed time", runtime.milliseconds());
 //        }
+
+        ll.update();
         dashboardTelemetry.addData("Status", "Run Time: " + runtime.toString());
-        index.toShootTarget(targSlot);
+        index.toShoot(targSlot);
+        shooter.setShooterSpeed(shooter.calculateSpeed(ll.getDistance()));
+        if(shooter.isSpunUp()){
+            ejector.quickfire();
+        }
         index.update();
         shooter.update();
         ejector.update();
         intake.update();
-        ll.update();
         dashboardTelemetry.update();
     }
 

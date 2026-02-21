@@ -15,6 +15,7 @@ public class SuperSystem {
     MyLimeLight limelight;
     Servo blinkin;
     TelemetryManager dashboardTelemetry;
+    ElapsedTime lockTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     private boolean isAiming = false;
     private boolean shootReady = false;
     private boolean holdPosition = false;
@@ -23,11 +24,14 @@ public class SuperSystem {
     private boolean aimForceStop = false;
     private boolean isScanning = false;
     private boolean orderToShoot = false;
+    private boolean indexCheck = false;
     private int aimDirection;
+    private int color;
     private double headingToMaintain;
     public static int toggleState = 0;
-    public static double xLeftLimit = -6;
-    public static double xRightLimit = 4;
+    public static int lockTime = 200;
+    public static double xLeftLimit = -3;
+    public static double xRightLimit = 3;
     public static double shooterPower = 0.9;
     public SuperSystem(HardwareMap hardwareMap, TelemetryManager dashboard){
         index = new Index(hardwareMap, dashboard);
@@ -37,7 +41,6 @@ public class SuperSystem {
         limelight = new MyLimeLight(hardwareMap, dashboard);
         blinkin = hardwareMap.get(Servo.class, "abrahamBlinkin");
         dashboardTelemetry = dashboard;
-        reset();
     }
     public void startIntaking(){
         isIntaking = true;
@@ -67,7 +70,11 @@ public class SuperSystem {
 
     public void setLED(){
         if(toggleState == 0){
-            blinkin.setPosition(1);
+            if(color == 1){
+                 blinkin.setPosition(1);
+            }else if(color == 0){
+                blinkin.setPosition(.611);
+            }
         }else if(toggleState == 1){
             blinkin.setPosition(0.5);
         }else if(toggleState == 2){
@@ -101,8 +108,11 @@ public class SuperSystem {
                 index.toPickupTarget(0);
             }
             if(index.isFull() || intakeForceStop){
+                lockTimer.reset();
+                while(lockTimer.milliseconds()<lockTime){}
                 isIntaking = false;
                 intakeForceStop = false;
+                index.toShoot(0);
                 index.setIsSensing(false);
 //                index.reset();
                 intake.stopIntake();
@@ -123,11 +133,13 @@ public class SuperSystem {
                 limelight.stop();
                 isAiming = false;
                 aimForceStop = false;
+                holdPosition = false;
             }
         }
 //        if(shootReady && orderToShoot){
         if(orderToShoot){
-            shooter.startShooter();
+            limelight.update();
+            shooter.setShooterSpeed(shooter.calculateSpeed(limelight.getDistance()));
             if(!index.isEmpty()) {
                 if (toggleState == 1 || toggleState == 2) {
                     index.toShootTarget(toggleState);
@@ -150,6 +162,8 @@ public class SuperSystem {
                 isAiming = false;
             }
         }
+        dashboardTelemetry.addData("isChecking", indexCheck);
+        dashboardTelemetry.addData("isCheckingIndexSubsys",index.getCheck());
         dashboardTelemetry.addData("isIntaking", isIntaking);
         dashboardTelemetry.addData("forcestop", intakeForceStop);
         dashboardTelemetry.addData("shoot ordered?", orderToShoot);
@@ -179,5 +193,11 @@ public class SuperSystem {
     }
     public void startLimelight(int pl){
         limelight.start(pl);
+    }
+    public void setAllianceColor(int c){
+        color = c;
+    }
+    public void checkIndex(){
+        indexCheck = true;
     }
 }

@@ -66,10 +66,6 @@ public class SpindexTest extends OpMode {
     @Override
     public void start() {
         runtime.reset();
-        spindexer.setTargetPositionTolerance(tol);
-        spindexer.setTargetPosition(targetPos);
-        spindexer.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        spindexer.setPower(speed);
     }
 
     /*

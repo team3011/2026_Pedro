@@ -19,7 +19,7 @@ public class Index {
     public static int delay = 100;
     public static double maxPower = 0.5;
     public static double minPower = 0.01;
-    public static double resetSpeed = 0.3;
+    public static double resetVelocity = 120;
     public double currentPosInDegrees;
     public int currentRevs;
     public int currentPosition;
@@ -31,12 +31,13 @@ public class Index {
     private ColorSense colorSense;
     private Slot[]
             indexSlots = {new Slot(0, 0), new Slot(TICKSBETWEENSLOTS,0), new Slot(TICKSBETWEENSLOTS*2,0)};
-    public static double kP = 0.012;
+    public static double kP = 0.018;
     public static double kI = 0.001;
     public static double kD = 0.0001;
     public boolean isSensing = false;
     public boolean resetFlag = false;
     public boolean isMoving = false;
+    private boolean check = false;
     TelemetryManager dashboardTelemetry;
     ElapsedTime intakeDelay;
     public Index(HardwareMap hardwareMap, TelemetryManager dashboard){
@@ -139,16 +140,16 @@ public class Index {
 
     public void reset(){
         while(!resetSensor.isPressed()){
-            spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            spindexer.setPower(resetSpeed);
+            spindexer.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            spindexer.setVelocity(resetVelocity);
         }
-        spindexer.setPower(0);
+        spindexer.setVelocity(0);
         targetPos = 0;
         spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
     public boolean isAtPosition(){
-        return Math.abs(currentPosition-targetPos) < tolerance;
+        return Math.abs(currentPosition-targetPos) <= tolerance;
     }
     public boolean ballDetected(){
         return colorSense.ballDetected();
@@ -182,8 +183,7 @@ public class Index {
 
     public void update(){
         currentRevs = currentPosition/TICKSPERREV;
-        colorSense.update();
-        if(isSensing & colorSense.ballDetected() && isAtPosition()){
+        colorSense.update();if(isSensing && colorSense.ballDetected() && isAtPosition()){
             intakeDelay.reset();
             while(intakeDelay.milliseconds() < delay){}
             indexSlots[currentSlot].setColor(colorSense.getColor());
@@ -220,6 +220,15 @@ public class Index {
             input = -limiter;
         }
         return input;
+    }
+    public void checkSlots(){
+        check = true;
+    }
+    public void stopChecking(){
+        check = false;
+    }
+    public boolean getCheck(){
+        return check;
     }
     public class Slot{
         private int position;

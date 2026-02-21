@@ -28,10 +28,12 @@ public class MecanumDrive {
     public double flPow;
     public double rotSpeed;
     private double lastHeadingError = 0;
-    public static double kP = 0.007;
-    public static double kPClose = 0.013;
+    public static double kP = 0.012;
+    public static double kPClose = 0.020;
     public static double kD = 0.03;
-    public static double minPowerThreshold = 0.07;
+    public static double minPowerThreshold = 0.05;
+    private double kPTerm = 0;
+    private double kDTerm = 0;
     private ElapsedTime correctionTimer = new ElapsedTime();
     private ElapsedTime settleElapsedTime = new ElapsedTime();
     private double filteredDerivative = 0;
@@ -180,12 +182,14 @@ public class MecanumDrive {
 //                }
                 double dt = correctionTimer.seconds();
                 correctionTimer.reset();
-
-                double rawDerivative = (dt > 0) ? (shorter - lastHeadingError) / dt : 0;
+                if (dt < 0.005) dt = 0.005; // minimum 5ms to prevent division spike
+                double rawDerivative = (shorter - lastHeadingError) / dt;
                 filteredDerivative = derivativeFilterAlpha * rawDerivative + (1 - derivativeFilterAlpha) * filteredDerivative;
                 lastHeadingError = shorter;
                 double kPEffective = (Math.abs(shorter) < 5.0) ? kPClose : kP;
-                double correction = -(kPEffective * shorter + kD * filteredDerivative);
+                kPTerm = -(kPEffective * shorter);
+                kDTerm = -(kD * filteredDerivative);
+                double correction = kPTerm + kDTerm;
                 // only apply minimum power if we're outside tolerance
                 if (Math.abs(shorter) > ANGULAR_TOLERANCE_DEGREES) {
                     if (Math.abs(correction) < minPowerThreshold) {
@@ -242,15 +246,13 @@ public class MecanumDrive {
         while (error < -180) error += 360;
 
         if (Math.abs(error) > 5.0) {
-            // far from target, drive fast directly
-            double fastRx = limiter(-Math.copySign(0.4, error), 0.4);
-            headingToMaintain = robotHeadingDEG;
-            wasRotating = true;
-            settleElapsedTime.reset();
+            double fastRx = -Math.copySign(0.4, error);
+            // don't touch headingToMaintain here at all
+            wasRotating = false; // don't trigger settle window
             drive2(x, y, fastRx / rotSpeedMulti);
         } else {
-            // close enough, hand off to normal PD correction
             setHeadingToMaintain(targetDeg);
+            wasRotating = false;
             drive2(x, y, 0);
         }
     }
@@ -270,4 +272,7 @@ public class MecanumDrive {
     public double getHeadingInDEG(){
         return headingInDEG;
     }
+    public double getFilteredDerivative() { return filteredDerivative; }
+    public double getKPTerm() { return kPTerm; }
+    public double getKDTerm() { return kDTerm; }
 }

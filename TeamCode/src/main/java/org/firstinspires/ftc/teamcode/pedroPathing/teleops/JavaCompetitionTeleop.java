@@ -26,7 +26,7 @@ public abstract class JavaCompetitionTeleop extends OpMode {
     MecanumDrive drive;
     GamepadEx g1;
     SuperSystem superSystem;
-    private double rotSpeed = 0.15;
+    public static double rotSpeed = 0.15;
     private boolean snappingToHeading = false;
     private double snapTargetDeg = 0;
     /*     * Code to run ONCE when the driver hits INIT
@@ -40,6 +40,11 @@ public abstract class JavaCompetitionTeleop extends OpMode {
         // to 'get' must correspond to the names assigned during the robot configuration
         // step
         superSystem = new SuperSystem(hardwareMap, dashboardTelemetry);
+        if(getAllianceColor().equals(AllianceColor.RED)){
+            superSystem.setAllianceColor(1);
+        }else if(getAllianceColor().equals(AllianceColor.BLUE)){
+            superSystem.setAllianceColor(0);
+        }
         superSystem.shooterOff();
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Initialized");
@@ -58,6 +63,7 @@ public abstract class JavaCompetitionTeleop extends OpMode {
     @Override
     public void start() {
         runtime.reset();
+        superSystem.reset();
     }
 
     /*
@@ -115,6 +121,11 @@ public abstract class JavaCompetitionTeleop extends OpMode {
             if (this.g1.wasJustPressed(GamepadKeys.Button.A)) {
                 superSystem.reset();
             }else if(this.g1.wasJustPressed(GamepadKeys.Button.B)){
+                if (getAllianceColor().equals(AllianceColor.RED)) {
+                    superSystem.startLimelight(1);
+                } else if (getAllianceColor().equals(AllianceColor.BLUE)) {
+                    superSystem.startLimelight(0);
+                }
                 superSystem.shoot();
             }else if(this.g1.wasJustPressed(GamepadKeys.Button.X)){
                 if(!superSystem.intakeIsBusy()){
@@ -125,10 +136,8 @@ public abstract class JavaCompetitionTeleop extends OpMode {
             }else if(this.g1.wasJustPressed(GamepadKeys.Button.Y)){
                 if(!superSystem.getAimStatus()) {
                     if (getAllianceColor().equals(AllianceColor.RED)) {
-                        drive.setHeadingToMaintain(-45);
                         superSystem.startLimelight(1);
                     } else if (getAllianceColor().equals(AllianceColor.BLUE)) {
-                        drive.setHeadingToMaintain(45);
                         superSystem.startLimelight(0);
                     }
                     superSystem.aimShooter();
@@ -175,6 +184,9 @@ public abstract class JavaCompetitionTeleop extends OpMode {
         dashboardTelemetry.addData("headingToMaintain", drive.getHeadingToMaintain());
         dashboardTelemetry.addData("leftx", left_x);
         dashboardTelemetry.addData("lefty", left_y);
+        dashboardTelemetry.addData("filteredDerivative", drive.getFilteredDerivative());
+        dashboardTelemetry.addData("kPterm", drive.getKPTerm());
+        dashboardTelemetry.addData("kDterm", drive.getKDTerm());
 //        dashboardTelemetry.addData("fl Pow", drive.getFlPow());
         dashboardTelemetry.update();
     }

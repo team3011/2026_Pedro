@@ -27,6 +27,7 @@ public class SuperSystem {
     private boolean indexCheck = false;
     private int aimDirection;
     private int color;
+    private double targShooterSpeed;
     private double headingToMaintain;
     public static int toggleState = 0;
     public static int lockTime = 200;
@@ -139,7 +140,9 @@ public class SuperSystem {
 //        if(shootReady && orderToShoot){
         if(orderToShoot){
             limelight.update();
-            shooter.setShooterSpeed(shooter.calculateSpeed(limelight.getDistance()));
+            targShooterSpeed = shooter.calculateSpeed(limelight.getDistance());
+            shooter.setShooterSpeed(targShooterSpeed);
+            shooter.update();
             if(!index.isEmpty()) {
                 if (toggleState == 1 || toggleState == 2) {
                     index.toShootTarget(toggleState);
@@ -149,7 +152,7 @@ public class SuperSystem {
                     }
                 }else if(toggleState == 0){
                     index.toShootClosest();
-                    if(index.isAtPosition() && shooter.isSpunUp()){
+                    if(index.isAtPosition() && shooter.isSpunUp() && limelight.getDistance() > 0){
                         ejector.quickfire();
                         index.emptyCurrentSlot();
                     }
@@ -167,6 +170,7 @@ public class SuperSystem {
         dashboardTelemetry.addData("isIntaking", isIntaking);
         dashboardTelemetry.addData("forcestop", intakeForceStop);
         dashboardTelemetry.addData("shoot ordered?", orderToShoot);
+        dashboardTelemetry.addData("desired shooter speed", targShooterSpeed);
         dashboardTelemetry.addData("aimDir", aimDirection);
         dashboardTelemetry.addData("aim state", getAimStatus());
         setLED();
@@ -191,11 +195,17 @@ public class SuperSystem {
     public boolean holdingPosition(){
         return holdPosition;
     }
+    public boolean isEmpty(){
+        return index.isEmpty();
+    }
     public void startLimelight(int pl){
         limelight.start(pl);
     }
     public void setAllianceColor(int c){
         color = c;
+    }
+    public void setIndex(int q, int w, int e){
+        index.setIndexSlots(q,w,e);
     }
     public void checkIndex(){
         indexCheck = true;

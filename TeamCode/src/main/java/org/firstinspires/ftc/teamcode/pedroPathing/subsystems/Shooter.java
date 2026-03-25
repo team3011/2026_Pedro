@@ -16,7 +16,7 @@ public class Shooter {
     public static double defaultShooterSpeed = 175;
     public static double shooterPos = 0.6;
     private boolean isSpunUp;
-    public static int shooterTol = 8;
+    public static int shooterTol = 7;
     DcMotorEx shooterL;
     DcMotorEx shooterR;
     Servo pivotL;

@@ -31,9 +31,9 @@ public class Index {
     private ColorSense colorSense;
     private Slot[]
             indexSlots = {new Slot(0, 0), new Slot(TICKSBETWEENSLOTS,0), new Slot(TICKSBETWEENSLOTS*2,0)};
-    public static double kP = 0.018;
-    public static double kI = 0.001;
-    public static double kD = 0.0001;
+    public static double kP = 0.0145;
+    public static double kI = 0.0015;
+    public static double kD = 0.00025;
     public boolean isSensing = false;
     public boolean resetFlag = false;
     public boolean isMoving = false;
@@ -147,6 +147,11 @@ public class Index {
         targetPos = 0;
         spindexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         spindexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+    }
+    public void setIndexSlots(int s0, int s1, int s2){
+        indexSlots[0].setColor(s0);
+        indexSlots[1].setColor(s1);
+        indexSlots[2].setColor(s2);
     }
     public boolean isAtPosition(){
         return Math.abs(currentPosition-targetPos) <= tolerance;

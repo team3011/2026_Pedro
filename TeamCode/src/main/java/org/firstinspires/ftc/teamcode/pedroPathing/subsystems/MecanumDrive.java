@@ -245,14 +245,34 @@ public class MecanumDrive {
         while (error > 180) error -= 360;
         while (error < -180) error += 360;
 
-        if (Math.abs(error) > 5.0) {
-            double fastRx = -Math.copySign(0.4, error);
-            // don't touch headingToMaintain here at all
-            wasRotating = false; // don't trigger settle window
-            drive2(x, y, fastRx / rotSpeedMulti);
-        } else {
-            setHeadingToMaintain(targetDeg);
+        if (Math.abs(error) > 8.0) {
+            // fast phase - write motor powers directly, bypass drive2 entirely
+            double fastRx = -Math.copySign(0.5, error);
+
+            // still do field centric translation so driver can strafe during snap
+            double rotX = (-x) * Math.cos(-robotHeadingRAD) - (-y) * Math.sin(-robotHeadingRAD);
+            double rotY = (-x) * Math.sin(-robotHeadingRAD) + (-y) * Math.cos(-robotHeadingRAD);
+            rotX = rotX * rotMulti;
+
+            double denominator = Math.max(Math.abs(rotX) + Math.abs(rotY) + Math.abs(fastRx), 1);
+            leftFront.setPower((rotY + rotX + fastRx) / denominator);
+            rightFront.setPower((rotY - rotX - fastRx) / denominator);
+            leftBack.setPower((rotY - rotX + fastRx) / denominator);
+            rightBack.setPower((rotY + rotX - fastRx) / denominator);
+
+            // keep PD state clean for handoff
             wasRotating = false;
+            lastHeadingError = error;
+            filteredDerivative = 0;
+            correctionTimer.reset();
+
+        } else {
+            // close enough, hand off to PD correction cleanly
+            headingToMaintain = targetDeg;
+            wasRotating = false;
+            lastHeadingError = 0;
+            filteredDerivative = 0;
+            correctionTimer.reset();
             drive2(x, y, 0);
         }
     }
